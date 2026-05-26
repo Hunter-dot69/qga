@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QGA — Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070907;--s1:#0d110d;--s2:#121812;--s3:#181e18;
+  --b1:#1e281e;--b2:#273227;--b3:#344034;
+  --g1:#36483C;--g2:#4a6350;--g3:#5d9468;
+  --ac:#9dcf97;--ac2:#c2e8bc;
+  --tx:#cce3c8;--tx2:#8aaa86;--mu:#4a6050;
+  --gold:#c8a84b;--red:#d45050;--wh:#edf5eb;
+  --shadow:rgba(0,0,0,.8);
+}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:'DM Mono',monospace;font-size:12px;line-height:1.6;overflow:hidden}
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--g1);border-radius:2px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ── SHELL ── */
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{width:220px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--b1);display:flex;flex-direction:column;overflow:hidden}
+.sb-brand{padding:18px 20px 16px;border-bottom:1px solid var(--b1)}
+.sb-logo{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:5px;color:var(--ac);line-height:1}
+.sb-tag{font-size:8px;letter-spacing:3px;color:var(--mu);text-transform:uppercase;margin-top:2px}
+.sb-live{display:flex;align-items:center;gap:5px;font-size:8px;letter-spacing:2px;color:var(--g3);margin-top:6px}
+.dot{width:5px;height:5px;background:var(--g3);border-radius:50%;box-shadow:0 0 6px var(--g3);animation:blink 2s infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 6px var(--g3)}50%{opacity:.3;box-shadow:none}}
+
+/* NAV GROUPS */
+.sb-nav{flex:1;overflow-y:auto;padding:12px 0}
+.nav-group{margin-bottom:4px}
+.nav-group-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--mu);padding:8px 20px 4px}
+.nav-btn{display:flex;align-items:center;gap:10px;width:100%;background:none;border:none;padding:9px 20px;font-family:'DM Mono',monospace;font-size:11px;color:var(--tx2);cursor:pointer;text-align:left;transition:all .15s;border-left:2px solid transparent}
+.nav-btn:hover{background:var(--s2);color:var(--tx)}
+.nav-btn.on{background:var(--s2);color:var(--ac);border-left-color:var(--g3)}
+.nav-icon{font-size:13px;width:18px;flex-shrink:0}
+
+/* SIDEBAR BOTTOM */
+.sb-bottom{padding:14px 20px;border-top:1px solid var(--b1)}
+.clk{font-size:11px;letter-spacing:2px;color:var(--mu);font-variant-numeric:tabular-nums}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.main-header{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid var(--b1);background:var(--s1);flex-shrink:0}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--wh)}
+.page-sub{font-size:9px;letter-spacing:2px;color:var(--mu);margin-top:1px;text-transform:uppercase}
+.content{flex:1;overflow-y:auto;padding:24px 28px}
+
+/* ── CARDS ── */
+.card{background:var(--s1);border:1px solid var(--b1);padding:18px;transition:border-color .2s}
+.card:hover{border-color:var(--b2)}
+.card+.card{margin-top:14px}
+.card-title{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--ac);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.mb14{margin-bottom:14px}
+.mb20{margin-bottom:20px}
+
+/* ── STAT CARDS ── */
+.stat{background:var(--s1);border:1px solid var(--b1);padding:16px 18px;position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--g1),transparent)}
+.stat-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
+.stat-val{font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--wh);line-height:1}
+.stat-sub{font-size:9px;color:var(--mu);margin-top:3px}
+.stat-accent .stat-val{color:var(--ac)}
+.stat-gold .stat-val{color:var(--gold)}
+
+/* ── INPUTS ── */
+.fi{background:var(--s2);border:1px solid var(--b1);color:var(--tx);font-family:'DM Mono',monospace;font-size:11px;padding:8px 10px;width:100%;outline:none;transition:border-color .2s}
+.fi:focus{border-color:var(--g3)}
+.fi::placeholder{color:var(--mu)}
+select.fi option{background:var(--s2)}
+textarea.fi{resize:vertical}
+.fl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mu);margin-bottom:5px}
+
+/* ── BUTTONS ── */
+.btn{background:var(--g1);border:1px solid var(--g2);color:var(--ac);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:8px 16px;cursor:pointer;transition:all .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--g2);box-shadow:0 0 12px rgba(74,99,80,.3)}
+.btn-sm{padding:6px 10px;font-size:8px}
+.btn-ghost{background:transparent;border-color:var(--b2);color:var(--mu)}
+.btn-ghost:hover{border-color:var(--b3);color:var(--tx);box-shadow:none}
+.btn-run{background:linear-gradient(135deg,var(--g1),var(--g2));border-color:var(--g3);color:var(--ac2);padding:10px 20px;font-size:10px;box-shadow:0 0 14px rgba(93,148,104,.15)}
+.btn-run:hover{box-shadow:0 0 24px rgba(93,148,104,.35)}
+.btn-gold{background:transparent;border-color:var(--gold);color:var(--gold)}
+
+/* ── DIVIDER ── */
+.dvd{height:1px;background:var(--b1);margin:16px 0}
+
+/* ── BANNER ── */
+.banner{background:linear-gradient(135deg,var(--g1) 0%,#152018 100%);border:1px solid var(--g2);padding:16px 20px;margin-bottom:20px}
+.banner-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:4px;color:var(--ac)}
+.banner-sub{font-size:9px;letter-spacing:2px;color:var(--tx2);margin-top:3px}
+
+/* ── TAGS ── */
+.tag{display:inline-block;font-size:8px;letter-spacing:1px;padding:2px 7px;text-transform:uppercase}
+.tag-g{background:#0e1e0e;color:var(--g3)}
+.tag-gold{background:#1e1508;color:var(--gold)}
+.tag-red{background:#1e0808;color:var(--red)}
+
+/* ── PROGRESS ── */
+.prog-track{height:3px;background:var(--b1);margin-top:6px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--g1),var(--g3));transition:width .6s ease}
+
+/* ── EMPLOYEE GRID ── */
+.emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.emp-card{background:var(--s1);border:1px solid var(--b1);padding:16px;cursor:pointer;transition:all .2s;position:relative}
+.emp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--g2);opacity:0;transition:opacity .2s}
+.emp-card:hover{border-color:var(--g2);transform:translateY(-1px)}
+.emp-card:hover::before{opacity:1}
+.emp-card.ceo{border-color:var(--g1);background:linear-gradient(135deg,var(--s1),#0d1a10)}
+.emp-card.ceo::before{opacity:1;background:var(--g3)}
+.emp-icon{font-size:18px;margin-bottom:8px;display:block}
+.emp-name{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--wh);margin-bottom:4px}
+.emp-desc{font-size:9px;color:var(--tx2);line-height:1.5}
+.emp-arrow{position:absolute;top:14px;right:14px;font-size:9px;color:var(--mu);transition:all .2s}
+.emp-card:hover .emp-arrow{color:var(--ac);transform:translateX(2px)}
+
+/* ── CHAT ── */
+.chat-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--b1)}
+.chat-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--wh)}
+.chat-sub{font-size:9px;letter-spacing:2px;color:var(--mu);text-transform:uppercase}
+.starters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.starter-btn{background:var(--s2);border:1px solid var(--b2);color:var(--tx2);font-family:'DM Mono',monospace;font-size:9px;padding:6px 10px;cursor:pointer;transition:all .15s}
+.starter-btn:hover{border-color:var(--g2);color:var(--ac)}
+.chat-messages{background:var(--s1);border:1px solid var(--b1);height:380px;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:12px}
+.msg-user{background:var(--g1);border:1px solid var(--g2);padding:10px 13px;align-self:flex-end;max-width:75%;font-size:11px;color:var(--ac2);line-height:1.7}
+.msg-ai{background:var(--s2);border:1px solid var(--b1);padding:13px 15px;max-width:88%;font-size:11px;color:var(--tx);line-height:1.9}
+.msg-ai .ln{padding:2px 0;color:var(--tx)}
+.msg-ai .ln-num{padding:3px 0;color:var(--tx)}
+.msg-ai .ln-sub{padding:2px 0 2px 10px;color:var(--tx2)}
+.msg-ai .ln-head{color:var(--ac);font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-top:8px;margin-bottom:2px}
+.msg-thinking{color:var(--mu);font-size:10px;font-style:italic;padding:8px 0;animation:fadepulse 1.5s infinite}
+@keyframes fadepulse{0%,100%{opacity:1}50%{opacity:.4}}
+.chat-input-row{display:flex;gap:10px}
+.chat-textarea{flex:1;background:var(--s2);border:1px solid var(--b1);color:var(--tx);font-family:'DM Mono',monospace;font-size:11px;padding:10px 12px;outline:none;resize:none;transition:border-color .2s;height:68px}
+.chat-textarea:focus{border-color:var(--g3)}
+.chat-textarea::placeholder{color:var(--mu)}
+.chat-hint{font-size:8px;color:var(--mu);margin-top:5px;letter-spacing:1px}
+
+/* ── PIPELINE TABLE ── */
+.ptbl{width:100%;border-collapse:collapse}
+.ptbl th{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mu);padding:8px 10px;text-align:left;border-bottom:1px solid var(--b1);background:var(--s2)}
+.ptbl td{padding:8px 10px;border-bottom:1px solid var(--b1);font-size:11px;vertical-align:middle}
+.ptbl tr:last-child td{border-bottom:none}
+.ptbl tr:hover td{background:var(--s2)}
+
+/* ── TASKS ── */
+.task-sec{margin-bottom:8px}
+.task-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--s2);border:1px solid var(--b1);cursor:pointer;user-select:none}
+.task-hdr:hover{background:var(--s3)}
+.task-hdr-l{display:flex;align-items:center;gap:8px}
+.task-emp-name{font-family:'Syne',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--ac)}
+.task-count{font-size:8px;background:var(--g1);color:var(--ac);padding:2px 6px;letter-spacing:1px}
+.task-body{border:1px solid var(--b1);border-top:none;background:var(--s1);padding:12px}
+.task-item{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--b1)}
+.task-item:last-of-type{border-bottom:none}
+.tck{width:12px;height:12px;border:1px solid var(--b2);background:none;cursor:pointer;flex-shrink:0;margin-top:2px;appearance:none;position:relative;transition:all .15s}
+.tck:checked{background:var(--g2);border-color:var(--g3)}
+.tck:checked::after{content:'✓';position:absolute;top:-1px;left:1px;font-size:9px;color:var(--ac)}
+.task-text{font-size:11px;color:var(--tx);flex:1}
+.task-text.done{text-decoration:line-through;color:var(--mu)}
+.task-del{background:none;border:none;color:var(--mu);cursor:pointer;font-size:13px;padding:0 3px;line-height:1;transition:color .15s}
+.task-del:hover{color:var(--red)}
+
+/* ── DELIVERABLES ── */
+.del-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--s2);border:1px solid var(--b1);cursor:pointer;margin-bottom:0}
+.del-hdr:hover{background:var(--s3)}
+.del-title{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--ac);display:flex;align-items:center;gap:7px}
+.del-body{border:1px solid var(--b1);border-top:none;background:var(--s1);padding:12px;margin-bottom:8px}
+.del-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--b1);font-size:10px}
+.del-item:last-of-type{border-bottom:none}
+.del-text{flex:1;color:var(--tx);white-space:pre-wrap;word-break:break-word;line-height:1.7}
+
+/* ── REVIEW ── */
+.review-card{background:var(--s1);border:1px solid var(--b1);padding:16px}
+.review-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+
+/* ── COMMAND ── */
+.cmd-wrap{background:var(--s1);border:1px solid var(--b2);padding:18px;position:relative;margin-bottom:14px}
+.cmd-arrow{position:absolute;top:18px;left:18px;font-family:'Bebas Neue',sans-serif;font-size:17px;color:var(--g3)}
+.cmd-in{width:100%;background:none;border:none;color:var(--wh);font-family:'DM Mono',monospace;font-size:14px;padding:0 0 0 24px;outline:none;letter-spacing:1px}
+.cmd-in::placeholder{color:var(--mu)}
+.cmd-card{background:var(--s1);border:1px solid var(--g2);padding:16px;margin-bottom:10px}
+.cmd-q{font-size:12px;color:var(--wh);padding-bottom:12px;border-bottom:1px solid var(--b1);margin-bottom:12px}
+.cmd-a{font-size:11px;color:var(--tx2);line-height:1.9}
+
+/* ── WORKFLOW STEPS ── */
+.wf-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-bottom:20px}
+.wf-step{padding:16px 14px;background:var(--s1);border:1px solid var(--b1);border-right:none;position:relative}
+.wf-step:last-child{border-right:1px solid var(--b1)}
+.wf-num{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--b2);line-height:1;margin-bottom:5px}
+.wf-label{font-size:8px;letter-spacing:2px;color:var(--g3);text-transform:uppercase;margin-bottom:4px}
+.wf-text{font-size:9px;color:var(--tx2);line-height:1.6}
+.wf-arrow{position:absolute;right:-7px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--mu);background:var(--s1);padding:2px 0;z-index:1}
+.wf-step:last-child .wf-arrow{display:none}
+
+/* ── SCRIPT BLOCKS ── */
+.script-blk{background:var(--s2);border:1px solid var(--b1);border-left:3px solid var(--g2);padding:12px 15px;font-size:11px;color:var(--tx);line-height:1.8;margin-bottom:10px}
+.script-lbl{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--g3);margin-bottom:6px}
+
+/* ── OBJ CARDS ── */
+.obj-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.obj-card{background:var(--s2);border:1px solid var(--b1);padding:12px}
+.obj-q{font-size:11px;color:var(--gold);margin-bottom:6px}
+.obj-a{font-size:10px;color:var(--tx);line-height:1.7}
+
+
+/* ── CRM ── */
+.crm-contact{background:var(--s1);border:1px solid var(--b1);padding:16px;margin-bottom:10px;transition:border-color .2s;cursor:pointer}
+.crm-contact:hover{border-color:var(--b2)}
+.crm-contact.expanded{border-color:var(--g2)}
+.crm-name{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--wh);margin-bottom:3px}
+.crm-meta{font-size:10px;color:var(--tx2);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.crm-detail{margin-top:14px;padding-top:14px;border-top:1px solid var(--b1);display:none}
+.crm-contact.expanded .crm-detail{display:block}
+.crm-notes-list{margin-bottom:10px}
+.crm-note{background:var(--s2);border-left:2px solid var(--g2);padding:8px 10px;margin-bottom:6px;font-size:11px;color:var(--tx);line-height:1.7}
+.crm-note-time{font-size:9px;color:var(--mu);margin-top:3px}
+.activity-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.stage-pill{font-size:8px;letter-spacing:1px;padding:2px 8px;text-transform:uppercase}
+.s-cold{background:#0e1e1e;color:#5a9090}
+.s-called{background:#0e1e0e;color:var(--g3)}
+.s-pitched{background:#1e1508;color:var(--gold)}
+.s-closing{background:#1e0e1e;color:#c07898}
+.s-closed{background:#0a1e0e;color:var(--ac2);border:1px solid var(--g2)}
+.s-notinterested{background:#1e0e0e;color:var(--red)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:24px;background:var(--s2);border:1px solid var(--b2);padding:10px 16px;font-size:10px;color:var(--ac);z-index:999;opacity:0;transform:translateY(6px);transition:all .25s;pointer-events:none;box-shadow:0 4px 20px var(--shadow)}
+.toast.show{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── SIDEBAR ── -->
+<div class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">QGA</div>
+    <div class="sb-tag">Agency Command Center</div>
+    <div class="sb-live"><div class="dot"></div>LIVE</div>
+  </div>
+
+  <div class="sb-nav">
+    <div class="nav-group-label">Home</div>
+    <button class="nav-btn on" onclick="nav('dashboard',this)"><span class="nav-icon">⚡</span>Dashboard</button>
+
+    <div class="nav-group-label" style="margin-top:8px">Agency</div>
+    <button class="nav-btn" onclick="nav('employees',this)"><span class="nav-icon">👥</span>AI Employees</button>
+    <button class="nav-btn" onclick="nav('crm',this)"><span class="nav-icon">🗂️</span>CRM</button>
+    <button class="nav-btn" onclick="nav('pipeline',this)"><span class="nav-icon">📊</span>Pipeline</button>
+    <button class="nav-btn" onclick="nav('tasks',this)"><span class="nav-icon">✅</span>Tasks</button>
+    <button class="nav-btn" onclick="nav('deliverables',this)"><span class="nav-icon">📦</span>Deliverables</button>
+
+    <div class="nav-group-label" style="margin-top:8px">Ops</div>
+    <button class="nav-btn" onclick="nav('workflow',this)"><span class="nav-icon">📅</span>Daily Workflow</button>
+    <button class="nav-btn" onclick="nav('review',this)"><span class="nav-icon">📈</span>Weekly Review</button>
+    <button class="nav-btn" onclick="nav('command',this)"><span class="nav-icon">💬</span>CEO Command</button>
+
+    <div class="nav-group-label" style="margin-top:8px">Settings</div>
+    <button class="nav-btn" onclick="nav('profile',this)"><span class="nav-icon">📌</span>Profile</button>
+  </div>
+
+  <div class="sb-bottom">
+    <div class="clk" id="clk">--:-- --</div>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <div class="main-header">
+    <div>
+      <div class="page-title" id="pg-title">Dashboard</div>
+      <div class="page-sub" id="pg-sub">Welcome back — here's where things stand</div>
+    </div>
+    <div id="hdr-actions"></div>
+  </div>
+  <div class="content" id="content"></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_KEY = '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';
+
+// ── STATE ──
+let S = {
+  profile: { name:'Quarterly Growth Agency', niche:'Any service-based businesses', service:'Meta Ads (Facebook & Instagram)', skill:'Intermediate', goal:'Land 1 paying client', start:'Cold calling', offer:'', why:'', price:'', setup:'', client:'', owner:'' },
+  assets: { ig:true, web:true, deck:true, caseStudy:false, client:false },
+  stats: { calls:0, zooms:0, clients:0, revenue:0 },
+  tasks: { creative:[], buyer:[], copy:[], offer:[], sales:[], ops:[] },
+  deliverables: { hooks:[], scripts:[], angles:[], offers:[], sales:[], outreach:[], systems:[] },
+  leads: [],
+  contacts: [],
+  priorities: { today:'', week:'', why:'' },
+  milestones: [
+    {text:'Land first paying client', done:false, tag:'Active'},
+    {text:'Book first Zoom call', done:false, tag:'Next'},
+    {text:'Make 100 cold calls', done:false, tag:'Ongoing'},
+    {text:'Build first case study', done:false, tag:'After client'}
+  ],
+  ntd: ['Overthink branding','Consume content instead of acting','Wait until perfect to call'],
+  actionLog: [],
+  callsToday: 0,
+  bookedToday: 0,
+  callDate: '',
+  review: { wins:'', problems:'', fixes:'', next:'', calls:'', zooms:'', props:'', closed:'', rev:'' },
+  cmdHistory: [],
+  empConvos: {}
+};
+
+// ── CLOCK ──
+function tick(){
+  const n=new Date();let h=n.getHours(),m=n.getMinutes().toString().padStart(2,'0'),s=n.getSeconds().toString().padStart(2,'0');
+  const ap=h>=12?'PM':'AM';h=h%12||12;
+  document.getElementById('clk').textContent=`${h}:${m}:${s} ${ap}`;
+}
+setInterval(tick,1000);tick();
+
+// ── TOAST ──
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+// ── NAV ──
+const pageMeta = {
+  dashboard: {title:'Dashboard', sub:'Welcome back — here\'s where things stand'},
+  employees:  {title:'AI Employees', sub:'Click any role to open their live chat'},
+  crm:        {title:'CRM', sub:'Full contact database — every prospect, note, and follow-up'},
+  pipeline:   {title:'Pipeline', sub:'Track every lead from cold call to closed client'},
+  tasks:      {title:'Task Board', sub:'Assign work to each AI employee'},
+  deliverables:{title:'Deliverables Vault', sub:'Paste and store your best outputs'},
+  workflow:   {title:'Daily Workflow', sub:'Your operating rhythm — every single day'},
+  review:     {title:'Weekly Review', sub:'Every Sunday — 20 minutes max'},
+  command:    {title:'CEO Command', sub:'Ask anything — get a tactical answer back'},
+  profile:    {title:'Agency Profile', sub:'Your identity, offer, and live stats'},
+};
+
+function nav(id, btn){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  const meta = pageMeta[id] || {};
+  document.getElementById('pg-title').textContent = meta.title || id;
+  document.getElementById('pg-sub').textContent = meta.sub || '';
+  document.getElementById('hdr-actions').innerHTML = '';
+  renderPage(id);
+}
+
+
+// ── CRM ──
+function pageCRM(){
+  return `
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input class="fi" id="crm-search" placeholder="Search contacts..." style="width:220px;font-size:11px" oninput="filterCRM()">
+      <select class="fi" id="crm-filter-stage" style="width:130px;font-size:11px" onchange="filterCRM()">
+        <option value="">All Stages</option>
+        <option value="cold">Cold</option>
+        <option value="called">Called</option>
+        <option value="pitched">Pitched</option>
+        <option value="closing">Closing</option>
+        <option value="closed">Closed</option>
+        <option value="notinterested">Not Interested</option>
+      </select>
+      <select class="fi" id="crm-filter-niche" style="width:130px;font-size:11px" onchange="filterCRM()">
+        <option value="">All Niches</option>
+        <option>Med Spa</option><option>Gym</option><option>HVAC</option>
+        <option>Dentist</option><option>Real Estate</option><option>Law Firm</option><option>Other</option>
+      </select>
+    </div>
+    <button class="btn btn-sm" onclick="openAddContact()">+ Add Contact</button>
+  </div>
+
+  <!-- Add Contact Form -->
+  <div class="card mb14" id="crm-add-form" style="display:none">
+    <div class="card-title">New Contact</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+      <div><div class="fl">Full Name</div><input class="fi" id="cn-name" placeholder="e.g. John Smith"></div>
+      <div><div class="fl">Business</div><input class="fi" id="cn-biz" placeholder="e.g. Elite Med Spa"></div>
+      <div><div class="fl">Niche</div>
+        <select class="fi" id="cn-niche"><option>Med Spa</option><option>Gym</option><option>HVAC</option><option>Dentist</option><option>Real Estate</option><option>Law Firm</option><option>Other</option></select></div>
+      <div><div class="fl">Phone</div><input class="fi" id="cn-phone" placeholder="e.g. (555) 123-4567"></div>
+      <div><div class="fl">Email</div><input class="fi" id="cn-email" placeholder="email@business.com"></div>
+      <div><div class="fl">Stage</div>
+        <select class="fi" id="cn-stage">
+          <option value="cold">Cold</option><option value="called">Called</option>
+          <option value="pitched">Pitched</option><option value="closing">Closing</option>
+          <option value="closed">Closed ✓</option><option value="notinterested">Not Interested</option>
+        </select></div>
+      <div><div class="fl">City / Location</div><input class="fi" id="cn-city" placeholder="e.g. Oklahoma City, OK"></div>
+      <div><div class="fl">Follow-Up Date</div><input class="fi" id="cn-followup" type="date"></div>
+      <div><div class="fl">Source</div>
+        <select class="fi" id="cn-source"><option>Cold Call</option><option>Instagram DM</option><option>Referral</option><option>Website</option><option>Other</option></select></div>
+    </div>
+    <div style="margin-bottom:10px"><div class="fl">First Note</div><textarea class="fi" id="cn-note" rows="2" placeholder="e.g. Spoke to owner, interested but needs time. Call back next Tuesday."></textarea></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" onclick="addContact()">Save Contact</button>
+      <button class="btn btn-ghost" onclick="closeAddContact()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Stats row -->
+  <div class="g4 mb14" id="crm-stats"></div>
+
+  <!-- Contact list -->
+  <div id="crm-list"></div>`;
+}
+
+function openAddContact(){
+  const f=document.getElementById('crm-add-form');
+  if(f){f.style.display='block';document.getElementById('cn-name').focus();}
+}
+function closeAddContact(){
+  const f=document.getElementById('crm-add-form');
+  if(f)f.style.display='none';
+}
+
+function addContact(){
+  const name=document.getElementById('cn-name').value.trim();
+  const biz=document.getElementById('cn-biz').value.trim();
+  if(!name&&!biz){toast('Enter a name or business');return;}
+  const note=document.getElementById('cn-note').value.trim();
+  const contact={
+    id:Date.now(),
+    name:name||biz,
+    business:biz,
+    niche:document.getElementById('cn-niche').value,
+    phone:document.getElementById('cn-phone').value.trim(),
+    email:document.getElementById('cn-email').value.trim(),
+    stage:document.getElementById('cn-stage').value,
+    city:document.getElementById('cn-city').value.trim(),
+    followup:document.getElementById('cn-followup').value,
+    source:document.getElementById('cn-source').value,
+    added:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
+    notes: note ? [{text:note,time:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}] : [],
+    calls:0,
+  };
+  S.contacts.push(contact);
+  // clear fields
+  ['cn-name','cn-biz','cn-phone','cn-email','cn-city','cn-note'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('crm-add-form').style.display='none';
+  renderCRM();
+  toast('Contact saved ✓');
+}
+
+function deleteContact(id){
+  S.contacts=S.contacts.filter(c=>c.id!==id);
+  renderCRM();toast('Contact deleted');
+}
+
+function updateContactStage(id,stage){
+  const c=S.contacts.find(x=>x.id===id);
+  if(c){c.stage=stage;if(stage==='closed')toast('🎉 CLIENT CLOSED: '+c.name);}
+  renderCRM();
+}
+
+function addNote(id){
+  const inp=document.getElementById('note-input-'+id);
+  if(!inp)return;
+  const val=inp.value.trim();if(!val)return;
+  const c=S.contacts.find(x=>x.id===id);
+  if(!c)return;
+  if(!c.notes)c.notes=[];
+  c.notes.unshift({text:val,time:new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})});
+  inp.value='';
+  renderCRM();
+  // re-expand
+  setTimeout(()=>{
+    const el=document.getElementById('crm-c-'+id);
+    if(el){el.classList.add('expanded');}
+  },50);
+}
+
+function toggleContact(id){
+  const el=document.getElementById('crm-c-'+id);
+  if(el)el.classList.toggle('expanded');
+}
+
+function logCall(id){
+  const c=S.contacts.find(x=>x.id===id);
+  if(!c)return;
+  c.calls=(c.calls||0)+1;
+  c.lastCall=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  S.stats.calls++;
+  toast('Call logged for '+c.name);
+  renderCRM();
+  setTimeout(()=>{const el=document.getElementById('crm-c-'+id);if(el)el.classList.add('expanded');},50);
+}
+
+function stageLabel(s){
+  const map={cold:'Cold',called:'Called',pitched:'Pitched',closing:'Closing',closed:'Closed ✓',notinterested:'Not Interested'};
+  return map[s]||s;
+}
+function stageCls(s){
+  return 's-'+(s||'cold');
+}
+
+function renderCRM(){
+  renderCRMStats();
+  filterCRM();
+}
+
+function renderCRMStats(){
+  const el=document.getElementById('crm-stats');if(!el)return;
+  const total=S.contacts.length;
+  const followUps=S.contacts.filter(c=>c.followup&&new Date(c.followup)<=new Date(Date.now()+86400000*2)).length;
+  const closed=S.contacts.filter(c=>c.stage==='closed').length;
+  const hot=S.contacts.filter(c=>['pitched','closing'].includes(c.stage)).length;
+  el.innerHTML=`
+    <div class="stat"><div class="stat-label">Total Contacts</div><div class="stat-val">${total}</div></div>
+    <div class="stat stat-accent"><div class="stat-label">Hot Leads</div><div class="stat-val">${hot}</div><div class="stat-sub">Pitched + Closing</div></div>
+    <div class="stat stat-gold"><div class="stat-label">Follow-Ups Due</div><div class="stat-val">${followUps}</div><div class="stat-sub">Within 2 days</div></div>
+    <div class="stat"><div class="stat-label">Clients Closed</div><div class="stat-val">${closed}</div></div>`;
+}
+
+function filterCRM(){
+  const search=(document.getElementById('crm-search')?.value||'').toLowerCase();
+  const stageF=document.getElementById('crm-filter-stage')?.value||'';
+  const nicheF=document.getElementById('crm-filter-niche')?.value||'';
+  let contacts=S.contacts.filter(c=>{
+    const matchSearch=!search||(c.name||'').toLowerCase().includes(search)||(c.business||'').toLowerCase().includes(search)||(c.phone||'').includes(search);
+    const matchStage=!stageF||c.stage===stageF;
+    const matchNiche=!nicheF||c.niche===nicheF;
+    return matchSearch&&matchStage&&matchNiche;
+  });
+  // Sort: follow-up due first, then by stage priority
+  const stagePriority={closing:0,pitched:1,called:2,cold:3,closed:4,notinterested:5};
+  contacts.sort((a,b)=>{
+    const aFU=a.followup?new Date(a.followup):null;
+    const bFU=b.followup?new Date(b.followup):null;
+    const now=new Date();
+    const aDue=aFU&&aFU<=now?-1:0;
+    const bDue=bFU&&bFU<=now?-1:0;
+    if(aDue!==bDue)return aDue-bDue;
+    return (stagePriority[a.stage]||3)-(stagePriority[b.stage]||3);
+  });
+  renderCRMList(contacts);
+}
+
+function renderCRMList(contacts){
+  const el=document.getElementById('crm-list');if(!el)return;
+  if(!contacts.length){
+    el.innerHTML=`<div style="text-align:center;color:var(--mu);padding:40px;font-size:11px">${S.contacts.length===0?'No contacts yet — click + Add Contact to start':'No contacts match your filters'}</div>`;
+    return;
+  }
+  el.innerHTML=contacts.map(c=>{
+    const fuDate=c.followup?new Date(c.followup):null;
+    const fuDue=fuDate&&fuDate<=new Date();
+    const fuSoon=fuDate&&!fuDue&&fuDate<=new Date(Date.now()+86400000*2);
+    return`<div class="crm-contact" id="crm-c-${c.id}">
+      <div onclick="toggleContact(${c.id})" style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+            <div class="crm-name">${c.name}</div>
+            <span class="stage-pill ${stageCls(c.stage)}">${stageLabel(c.stage)}</span>
+            ${fuDue?`<span class="tag tag-red" style="font-size:7px">⚠ Follow-up overdue</span>`:''}
+            ${fuSoon?`<span class="tag tag-gold" style="font-size:7px">📅 Follow-up soon</span>`:''}
+          </div>
+          <div class="crm-meta">
+            ${c.business?`<span>🏢 ${c.business}</span>`:''}
+            ${c.niche?`<span>📍 ${c.niche}</span>`:''}
+            ${c.phone?`<span>📞 ${c.phone}</span>`:''}
+            ${c.city?`<span>📌 ${c.city}</span>`:''}
+            ${c.calls?`<span style="color:var(--g3)">📲 ${c.calls} call${c.calls>1?'s':''}</span>`:''}
+            ${c.followup?`<span style="color:${fuDue?'var(--red)':fuSoon?'var(--gold)':'var(--mu)'}">🗓 ${new Date(c.followup).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>`:''}
+          </div>
+        </div>
+        <div style="display:flex;gap:7px;flex-shrink:0" onclick="event.stopPropagation()">
+          <button class="btn btn-sm btn-ghost" onclick="logCall(${c.id})" title="Log a call">📞</button>
+          <button class="btn btn-sm btn-ghost" onclick="deleteContact(${c.id})" title="Delete" style="color:var(--mu)">×</button>
+        </div>
+      </div>
+
+      <div class="crm-detail">
+        <div class="g2" style="gap:10px;margin-bottom:14px">
+          <div>
+            <div class="fl" style="margin-bottom:5px">Stage</div>
+            <select class="fi" style="font-size:11px" onchange="updateContactStage(${c.id},this.value)">
+              <option value="cold"${c.stage==='cold'?' selected':''}>Cold</option>
+              <option value="called"${c.stage==='called'?' selected':''}>Called</option>
+              <option value="pitched"${c.stage==='pitched'?' selected':''}>Pitched</option>
+              <option value="closing"${c.stage==='closing'?' selected':''}>Closing</option>
+              <option value="closed"${c.stage==='closed'?' selected':''}>Closed ✓</option>
+              <option value="notinterested"${c.stage==='notinterested'?' selected':''}>Not Interested</option>
+            </select>
+          </div>
+          <div>
+            <div class="fl" style="margin-bottom:5px">Follow-Up Date</div>
+            <input class="fi" type="date" style="font-size:11px" value="${c.followup||''}" onchange="S.contacts.find(x=>x.id===${c.id}).followup=this.value;renderCRMStats()">
+          </div>
+          ${c.email?`<div><div class="fl">Email</div><div style="font-size:11px;color:var(--tx);padding:4px 0">${c.email}</div></div>`:''}
+          ${c.source?`<div><div class="fl">Source</div><div style="font-size:11px;color:var(--tx);padding:4px 0">${c.source}</div></div>`:''}
+        </div>
+
+        <div class="fl" style="margin-bottom:8px">Notes & Activity</div>
+        <div class="crm-notes-list">
+          ${(c.notes||[]).length===0?`<div style="font-size:10px;color:var(--mu);margin-bottom:8px">No notes yet.</div>`:''}
+          ${(c.notes||[]).map(n=>`<div class="crm-note">${n.text}<div class="crm-note-time">${n.time}</div></div>`).join('')}
+        </div>
+        <div style="display:flex;gap:8px">
+          <input class="fi" id="note-input-${c.id}" placeholder="Add a note or call log..." style="flex:1;font-size:11px" onkeydown="if(event.key==='Enter')addNote(${c.id})">
+          <button class="btn btn-sm" onclick="addNote(${c.id})">+ Note</button>
+        </div>
+        <div style="font-size:9px;color:var(--mu);margin-top:6px">Added ${c.added} · Source: ${c.source||'—'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+// ── RENDER ROUTER ──
+function renderPage(id){
+  const c = document.getElementById('content');
+  switch(id){
+    case 'dashboard':   c.innerHTML = pageDashboard(); break;
+    case 'employees':   c.innerHTML = pageEmployees(); bindEmpCards(); break;
+    case 'crm':         c.innerHTML = pageCRM(); renderCRM(); break;
+    case 'pipeline':    c.innerHTML = pagePipeline(); renderLeads(); break;
+    case 'tasks':       c.innerHTML = pageTasks(); renderTasks(); break;
+    case 'deliverables':c.innerHTML = pageDels(); renderDels(); break;
+    case 'workflow':    c.innerHTML = pageWorkflow(); break;
+    case 'review':      c.innerHTML = pageReview(); loadReviewFields(); break;
+    case 'command':     c.innerHTML = pageCommand(); renderCmdHistory(); break;
+    case 'profile':     c.innerHTML = pageProfile(); loadProfileFields(); break;
+  }
+}
+
+// ═══════════════════════════════════════════
+// PAGE RENDERERS
+// ═══════════════════════════════════════════
+
+// ── DASHBOARD ──
+function pageDashboard(){
+  const closed = S.leads.filter(l=>l.stage==='closed').length;
+  const revenue = closed * (parseFloat(S.profile.price)||1500);
+  const convRate = S.stats.calls > 0 ? ((S.stats.zooms/S.stats.calls)*100).toFixed(1) : '0.0';
+  return `
+  <div class="banner">
+    <div class="banner-title">Quarterly Growth Agency</div>
+    <div class="banner-sub">Cold Call → Zoom → Close · 30-Day Goal: ${S.profile.goal}</div>
+  </div>
+
+  <div class="g4 mb14">
+    <div class="stat"><div class="stat-label">Total Calls Made</div><div class="stat-val">${S.stats.calls}</div><div class="stat-sub">Target: 400/mo</div><div class="prog-track"><div class="prog-fill" style="width:${Math.min((S.stats.calls/400)*100,100)}%"></div></div></div>
+    <div class="stat stat-accent"><div class="stat-label">Zooms Booked</div><div class="stat-val">${S.stats.zooms}</div><div class="stat-sub">Conv: ${convRate}%</div><div class="prog-track"><div class="prog-fill" style="width:${Math.min((S.stats.zooms/20)*100,100)}%"></div></div></div>
+    <div class="stat"><div class="stat-label">Clients Closed</div><div class="stat-val">${closed}</div><div class="stat-sub">Goal: 3 this month</div><div class="prog-track"><div class="prog-fill" style="width:${Math.min((closed/3)*100,100)}%"></div></div></div>
+    <div class="stat stat-gold"><div class="stat-label">Revenue Closed</div><div class="stat-val">$${revenue.toLocaleString()}</div><div class="stat-sub">Goal: $5,000/mo</div><div class="prog-track"><div class="prog-fill" style="width:${Math.min((revenue/5000)*100,100)}%"></div></div></div>
+  </div>
+
+  <div class="g2 mb14">
+    <div class="card">
+      <div class="card-title">Today's Priorities
+        <button class="btn btn-ghost btn-sm" onclick="nav('workflow',document.querySelector('.nav-btn:nth-child(6)'))">Open Workflow</button>
+      </div>
+      <div style="font-size:11px;color:var(--tx2);margin-bottom:12px">${S.priorities.today||'<span style="color:var(--mu)">Not set — go to Workflow to log today\'s focus</span>'}</div>
+      <div class="dvd"></div>
+      <div class="card-title" style="margin-bottom:10px">Update Stats</div>
+      <div class="g2" style="gap:10px;margin-bottom:10px">
+        <div><div class="fl">Total Calls</div><input class="fi" id="ds-calls" type="number" value="${S.stats.calls}" placeholder="0"></div>
+        <div><div class="fl">Total Zooms</div><input class="fi" id="ds-zooms" type="number" value="${S.stats.zooms}" placeholder="0"></div>
+      </div>
+      <button class="btn btn-sm" onclick="updateStats()">Update →</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Milestones</div>
+      ${S.milestones.map((m,i)=>`
+        <div style="display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--b1)">
+          <input type="checkbox" ${m.done?'checked':''} onchange="S.milestones[${i}].done=this.checked" style="accent-color:var(--g3);flex-shrink:0">
+          <span style="font-size:11px;color:${m.done?'var(--mu)':'var(--tx)'};flex:1;${m.done?'text-decoration:line-through':''}">${m.text}</span>
+          <span class="tag ${m.tag==='Active'?'tag-red':m.tag==='Next'?'tag-gold':'tag-g'}" style="font-size:7px">${m.tag}</span>
+        </div>`).join('')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Pipeline Quick View</div>
+    <div class="g4">
+      <div><div class="stat-label">Total Leads</div><div style="font-family:'Bebas Neue';font-size:28px;color:var(--wh)">${S.leads.length}</div></div>
+      <div><div class="stat-label">In Conversation</div><div style="font-family:'Bebas Neue';font-size:28px;color:var(--wh)">${S.leads.filter(l=>['called','pitched','closing'].includes(l.stage)).length}</div></div>
+      <div><div class="stat-label">Zooms Set</div><div style="font-family:'Bebas Neue';font-size:28px;color:var(--ac)">${S.leads.filter(l=>['pitched','closing'].includes(l.stage)).length}</div></div>
+      <div><div class="stat-label">Closed</div><div style="font-family:'Bebas Neue';font-size:28px;color:var(--gold)">${S.leads.filter(l=>l.stage==='closed').length}</div></div>
+    </div>
+  </div>`;
+}
+
+function updateStats(){
+  S.stats.calls = parseInt(document.getElementById('ds-calls').value)||0;
+  S.stats.zooms = parseInt(document.getElementById('ds-zooms').value)||0;
+  toast('Stats updated ✓');
+  renderPage('dashboard');
+}
+
+// ── PROFILE ──
+function pageProfile(){
+  const closed = S.leads.filter(l=>l.stage==='closed').length;
+  const revenue = closed*(parseFloat(S.profile.price)||1500);
+  const convRate = S.stats.calls>0?((S.stats.zooms/S.stats.calls)*100).toFixed(1):'0.0';
+  return `
+  <div class="g4 mb14">
+    <div class="stat"><div class="stat-label">Calls Made</div><div class="stat-val">${S.stats.calls}</div><div class="stat-sub">All time</div></div>
+    <div class="stat stat-accent"><div class="stat-label">Zooms Booked</div><div class="stat-val">${S.stats.zooms}</div><div class="stat-sub">${convRate}% conv rate</div></div>
+    <div class="stat"><div class="stat-label">Clients Closed</div><div class="stat-val">${closed}</div><div class="stat-sub">Paying clients</div></div>
+    <div class="stat stat-gold"><div class="stat-label">Revenue</div><div class="stat-val">$${revenue.toLocaleString()}</div><div class="stat-sub">Closed to date</div></div>
+  </div>
+
+  <div class="g2 mb14">
+    <div class="card">
+      <div class="card-title">Agency Info</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><div class="fl">Agency Name</div><input class="fi" id="pf-name" value="${S.profile.name}" oninput="S.profile.name=this.value"></div>
+        <div><div class="fl">Niche</div><input class="fi" id="pf-niche" value="${S.profile.niche}" oninput="S.profile.niche=this.value"></div>
+        <div><div class="fl">Service</div><input class="fi" id="pf-service" value="${S.profile.service}" oninput="S.profile.service=this.value"></div>
+        <div><div class="fl">Skill Level</div>
+          <select class="fi" id="pf-skill" onchange="S.profile.skill=this.value">
+            <option ${S.profile.skill==='Beginner'?'selected':''}>Beginner</option>
+            <option ${S.profile.skill==='Intermediate'?'selected':''}>Intermediate</option>
+            <option ${S.profile.skill==='Advanced'?'selected':''}>Advanced</option>
+          </select></div>
+        <div><div class="fl">30-Day Goal</div><input class="fi" id="pf-goal" value="${S.profile.goal}" oninput="S.profile.goal=this.value"></div>
+        <div><div class="fl">Starting Point</div><input class="fi" id="pf-start" value="${S.profile.start}" oninput="S.profile.start=this.value"></div>
+        <div style="grid-column:1/-1"><div class="fl">Offer (one sentence)</div><input class="fi" id="pf-offer" value="${S.profile.offer}" placeholder="I run Meta ads for service businesses that book 10-20 appointments/month" oninput="S.profile.offer=this.value"></div>
+        <div style="grid-column:1/-1"><div class="fl">Why I'm Building This</div><textarea class="fi" id="pf-why" rows="2" oninput="S.profile.why=this.value">${S.profile.why}</textarea></div>
+      </div>
+    </div>
+    <div>
+      <div class="card mb14">
+        <div class="card-title">Pricing</div>
+        <div class="g2" style="gap:10px">
+          <div><div class="fl">Retainer / Month</div><input class="fi" id="pf-price" value="${S.profile.price}" placeholder="e.g. $1,500" oninput="S.profile.price=this.value"></div>
+          <div><div class="fl">Setup Fee</div><input class="fi" id="pf-setup" value="${S.profile.setup}" placeholder="e.g. $500" oninput="S.profile.setup=this.value"></div>
+        </div>
+      </div>
+      <div class="card mb14">
+        <div class="card-title">Assets Built</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <label style="display:flex;align-items:center;gap:9px;font-size:11px;cursor:pointer"><input type="checkbox" ${S.assets.ig?'checked':''} onchange="S.assets.ig=this.checked" style="accent-color:var(--g3)"> Instagram page</label>
+          <label style="display:flex;align-items:center;gap:9px;font-size:11px;cursor:pointer"><input type="checkbox" ${S.assets.web?'checked':''} onchange="S.assets.web=this.checked" style="accent-color:var(--g3)"> Website live</label>
+          <label style="display:flex;align-items:center;gap:9px;font-size:11px;cursor:pointer"><input type="checkbox" ${S.assets.deck?'checked':''} onchange="S.assets.deck=this.checked" style="accent-color:var(--g3)"> Pitch deck built</label>
+          <label style="display:flex;align-items:center;gap:9px;font-size:11px;cursor:pointer"><input type="checkbox" ${S.assets.caseStudy?'checked':''} onchange="S.assets.caseStudy=this.checked" style="accent-color:var(--g3)"> Case study / results</label>
+          <label style="display:flex;align-items:center;gap:9px;font-size:11px;cursor:pointer"><input type="checkbox" ${S.assets.client?'checked':''} onchange="S.assets.client=this.checked" style="accent-color:var(--g3)"> First client signed</label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Target Client</div>
+        <div style="display:grid;gap:10px">
+          <div><div class="fl">Ideal Business</div><input class="fi" value="${S.profile.client}" placeholder="e.g. Med spa, gym, HVAC" oninput="S.profile.client=this.value"></div>
+          <div><div class="fl">Ideal Owner</div><input class="fi" value="${S.profile.owner}" placeholder="e.g. Solo owner, 1-10 staff" oninput="S.profile.owner=this.value"></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function loadProfileFields(){}
+
+// ── EMPLOYEES ──
+const empCfg = {
+  ceo:      { icon:'🧠', name:'CEO Command Center',     sub:'Strategy & Direction',          starters:['Plan my day and assign tasks to the team','What should I focus on to land my first client?','Review my situation — give me the next 3 moves','Build me a 30-day action plan'], system: p=>`You are the CEO of Quarterly Growth Agency. You are the owner's strategic partner — direct, decisive, and focused on landing the first paying client fast. Agency: Niche: ${p.niche}, Service: ${p.service}, Skill: ${p.skill}, Goal: ${p.goal}, Starting point: ${p.start}, Offer: ${p.offer||'not defined'}. Think like a CEO — set priorities, assign tasks (to Creative Strategist, Media Buyer, Copywriter, Offer Engineer, Sales Coach, or Operations), cut through noise. Be blunt and tactical. Plain text, no markdown.` },
+  creative: { icon:'🎨', name:'Creative Strategist',    sub:'Hooks · Angles · Ad Concepts',   starters:['Write 10 hooks for a Meta ad targeting med spa owners','Give me 5 ad angles for a gym','What creative concepts work best for HVAC?','Build a 30-day Instagram content plan'], system: p=>`You are the Creative Strategist at Quarterly Growth Agency. You specialize in scroll-stopping Meta ad creative — hooks, angles, concepts, content calendars. The owner runs ${p.service} for ${p.niche}. Generate bold, specific, ready-to-use creative output. Think like the best creative director at a performance agency. No generic ideas. Plain text, numbered lists for multiple items.` },
+  buyer:    { icon:'📊', name:'Media Buyer',            sub:'Campaigns · Targeting · Scaling', starters:['Set up my first campaign structure for a dentist','My CPL is too high — what do I test?','Walk me through targeting for a gym owner','How do I scale a winning ad set?'], system: p=>`You are the Media Buyer at Quarterly Growth Agency. You are an expert in Meta ads for local service businesses. The owner is ${p.skill} level running campaigns for ${p.niche}. Give specific, actionable campaign setup, targeting, bidding, and optimization guidance. Real decisions, real numbers, real structures. Diagnose problems when given them. Plain text, numbered steps.` },
+  copy:     { icon:'✍️', name:'Copywriter',             sub:'Scripts · Outreach · Ad Copy',    starters:['Write a cold call script for HVAC owners','Write 3 outreach DMs for Instagram','Write ad copy for a med spa lead gen offer','Write 5 subject lines for a cold email'], system: p=>`You are the Copywriter at Quarterly Growth Agency. You write copy that converts — cold call scripts, outreach DMs, ad copy, landing pages, email sequences, captions. The agency targets ${p.niche} and the owner is cold calling for clients. Write direct, conversational, human copy focused on outcomes. No fluff. Full scripts when asked. Plain text only.` },
+  offer:    { icon:'💼', name:'Offer Engineer',         sub:'Offers · Value Stacks · Pricing', starters:['Help me structure my agency offer','What guarantee should I give new clients?','Build a value stack for a $1,500/mo package','How should I price my service?'], system: p=>`You are the Offer Engineer at Quarterly Growth Agency. You design irresistible offers — value stacks, guarantees, pricing structures, positioning. The owner sells ${p.service} to ${p.niche} and needs to close the first client. Make the offer so good it's almost stupid to say no. Think risk reversal, tangible deliverables, perceived value, pricing psychology. Be specific and practical. Plain text only.` },
+  sales:    { icon:'📞', name:'Sales Coach',            sub:'Cold Calls · Zoom · Objections',  starters:['I have a Zoom call tomorrow — prep me completely','Write a full cold call script for service businesses','How do I handle "I already have someone"?','Role-play a cold call with me'], system: p=>`You are the Sales Coach at Quarterly Growth Agency. You coach the owner on cold calling, Zoom sales calls, objection handling, and closing. Owner cold calls ${p.niche} owners to sell ${p.service}. Goal: land the first client. Give scripts, handle objections, prep for calls, build confidence. If they want a role-play, BE the prospect — use real objections. Be direct and practical. Plain text only.` },
+  ops:      { icon:'⚙️', name:'Operations & Systems',  sub:'SOPs · Workflows · Tools',        starters:['Build a client onboarding SOP','Create a daily cold calling checklist','What tools should I use to run my agency?','Build a campaign reporting template'], system: p=>`You are the Operations & Systems manager at Quarterly Growth Agency. You build the backend — SOPs, workflows, checklists, templates, tool stacks, delivery systems. The owner runs ${p.service} for ${p.niche} and is solo. Help them operate efficiently and deliver great results without burning out. Give specific tools, step-by-step SOPs, and ready-to-use templates. Plain text only.` }
+};
+
+function pageEmployees(){
+  return `
+  <div class="emp-grid">
+    ${Object.entries(empCfg).map(([id,e])=>`
+      <div class="emp-card ${id==='ceo'?'ceo':''}" data-emp="${id}">
+        <span class="emp-icon">${e.icon}</span>
+        <div class="emp-name">${e.name}</div>
+        <div class="emp-desc">${e.sub}</div>
+        <span class="emp-arrow">Chat →</span>
+      </div>`).join('')}
+  </div>
+  <div id="emp-chat-area" style="display:none">
+    <div class="chat-header">
+      <button class="btn btn-ghost btn-sm" onclick="closeEmpChat()">← Back</button>
+      <div>
+        <div class="chat-title" id="ec-title"></div>
+        <div class="chat-sub" id="ec-sub"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="clearEmpChat()" style="margin-left:auto">Clear</button>
+    </div>
+    <div class="starters" id="ec-starters"></div>
+    <div class="chat-messages" id="ec-msgs">
+      <div style="color:var(--mu);font-size:11px;margin:auto">Ask anything — your employee is ready.</div>
+    </div>
+    <div class="chat-input-row">
+      <textarea class="chat-textarea" id="ec-input" placeholder="Type your message..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendEmpMsg()}"></textarea>
+      <button class="btn btn-run" onclick="sendEmpMsg()" style="align-self:flex-end">Send →</button>
+    </div>
+    <div class="chat-hint">Enter to send · Shift+Enter for new line</div>
+  </div>`;
+}
+
+function bindEmpCards(){
+  document.querySelectorAll('.emp-card[data-emp]').forEach(c=>{
+    c.addEventListener('click',()=>openEmpChat(c.dataset.emp));
+  });
+}
+
+let currentEmp = null;
+
+function openEmpChat(id){
+  currentEmp = id;
+  if(!S.empConvos[id]) S.empConvos[id]=[];
+  const cfg = empCfg[id];
+  document.querySelector('.emp-grid').style.display='none';
+  document.getElementById('emp-chat-area').style.display='block';
+  document.getElementById('ec-title').textContent=cfg.icon+' '+cfg.name;
+  document.getElementById('ec-sub').textContent=cfg.sub;
+  document.getElementById('ec-starters').innerHTML=cfg.starters.map(s=>
+    `<button class="starter-btn" onclick="useStarter(this.textContent)">${s}</button>`
+  ).join('');
+  renderEmpMsgs();
+  setTimeout(()=>document.getElementById('ec-input')?.focus(),50);
+}
+
+function closeEmpChat(){
+  currentEmp=null;
+  document.querySelector('.emp-grid').style.display='grid';
+  document.getElementById('emp-chat-area').style.display='none';
+}
+
+function clearEmpChat(){
+  if(!currentEmp)return;
+  S.empConvos[currentEmp]=[];
+  renderEmpMsgs();
+}
+
+function useStarter(text){
+  document.getElementById('ec-input').value=text;
+  sendEmpMsg();
+}
+
+function fmtMsg(text){
+  return text.split('\n').filter(l=>l.trim()).map(line=>{
+    if(/^\d+\./.test(line.trim()))return`<div class="ln-num">${line}</div>`;
+    if(line.startsWith('-')||line.startsWith('→')||line.startsWith('•'))return`<div class="ln-sub">${line}</div>`;
+    if(line===line.toUpperCase()&&line.length<55&&line.length>3)return`<div class="ln-head">${line}</div>`;
+    return`<div class="ln">${line}</div>`;
+  }).join('');
+}
+
+function renderEmpMsgs(){
+  const c=document.getElementById('ec-msgs');
+  if(!c)return;
+  const msgs=S.empConvos[currentEmp]||[];
+  if(!msgs.length){c.innerHTML='<div style="color:var(--mu);font-size:11px;margin:auto">Ask anything — your employee is ready.</div>';return;}
+  c.innerHTML=msgs.map(m=>m.role==='user'
+    ?`<div class="msg-user">${m.content.replace(/\n/g,'<br>')}</div>`
+    :`<div class="msg-ai">${fmtMsg(m.content)}</div>`
+  ).join('');
+  c.scrollTop=c.scrollHeight;
+}
+
+async function sendEmpMsg(){
+  if(!currentEmp)return;
+  const inp=document.getElementById('ec-input');
+  const msg=inp.value.trim();if(!msg)return;
+  inp.value='';
+  S.empConvos[currentEmp].push({role:'user',content:msg});
+  renderEmpMsgs();
+  // thinking
+  const c=document.getElementById('ec-msgs');
+  const t=document.createElement('div');
+  t.className='msg-thinking';t.id='ec-thinking';
+  t.textContent=empCfg[currentEmp].name+' is thinking...';
+  c.appendChild(t);c.scrollTop=c.scrollHeight;
+  const sysPrompt=empCfg[currentEmp].system(S.profile);
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sysPrompt,messages:S.empConvos[currentEmp].map(m=>({role:m.role,content:m.content}))})
+    });
+    const data=await res.json();
+    const reply=data.content?.[0]?.text||'No response.';
+    S.empConvos[currentEmp].push({role:'assistant',content:reply});
+  }catch(e){
+    S.empConvos[currentEmp].push({role:'assistant',content:'Error: '+e.message});
+  }
+  renderEmpMsgs();
+}
+
+// ── PIPELINE ──
+function pagePipeline(){
+  return `
+  <div class="g4 mb14">
+    <div class="stat"><div class="stat-label">Total Leads</div><div class="stat-val" id="ps-t">0</div></div>
+    <div class="stat"><div class="stat-label">In Conversation</div><div class="stat-val" id="ps-c">0</div></div>
+    <div class="stat stat-accent"><div class="stat-label">Zooms Set</div><div class="stat-val" id="ps-z">0</div></div>
+    <div class="stat stat-gold"><div class="stat-label">Closed</div><div class="stat-val" id="ps-cl">0</div></div>
+  </div>
+  <div class="card mb14" id="add-lead-form" style="display:none">
+    <div class="card-title">New Lead</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+      <div><div class="fl">Business</div><input class="fi" id="nl-name" placeholder="Name" onkeydown="if(event.key==='Enter')addLead()"></div>
+      <div><div class="fl">Niche</div><select class="fi" id="nl-niche"><option>Med Spa</option><option>Gym</option><option>HVAC</option><option>Dentist</option><option>Real Estate</option><option>Law Firm</option><option>Other</option></select></div>
+      <div><div class="fl">Stage</div><select class="fi" id="nl-stage"><option value="cold">Cold</option><option value="called">Called</option><option value="pitched">Pitched</option><option value="closing">Closing</option><option value="closed">Closed ✓</option></select></div>
+      <div><div class="fl">Notes</div><input class="fi" id="nl-notes" placeholder="Optional"></div>
+      <button class="btn" onclick="addLead()">Add</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">All Leads
+      <button class="btn btn-sm" onclick="toggleAddLead()">+ Add Lead</button>
+    </div>
+    <div style="overflow-x:auto"><table class="ptbl"><thead><tr><th>Business</th><th>Niche</th><th>Stage</th><th>Notes</th><th>Added</th><th></th></tr></thead><tbody id="pl-body"></tbody></table></div>
+  </div>`;
+}
+
+function toggleAddLead(){
+  const f=document.getElementById('add-lead-form');
+  f.style.display=f.style.display==='none'?'block':'none';
+  if(f.style.display==='block')document.getElementById('nl-name').focus();
+}
+
+function addLead(){
+  const name=document.getElementById('nl-name').value.trim();if(!name)return;
+  S.leads.push({name,niche:document.getElementById('nl-niche').value,stage:document.getElementById('nl-stage').value,notes:document.getElementById('nl-notes').value,added:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}),id:Date.now()});
+  document.getElementById('nl-name').value='';document.getElementById('nl-notes').value='';
+  document.getElementById('add-lead-form').style.display='none';
+  renderLeads();toast('Lead added ✓');
+}
+
+function updateStage(id,stage){
+  const l=S.leads.find(x=>x.id===id);
+  if(l){if(stage==='closed'&&l.stage!=='closed')toast('🎉 CLIENT CLOSED: '+l.name);l.stage=stage;}
+  updatePipelineStats();
+}
+
+function delLead(id){S.leads=S.leads.filter(l=>l.id!==id);renderLeads();}
+
+function renderLeads(){
+  const tbody=document.getElementById('pl-body');if(!tbody)return;
+  if(!S.leads.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--mu);padding:24px">No leads yet — click + Add Lead</td></tr>';updatePipelineStats();return;}
+  tbody.innerHTML=S.leads.map(l=>`<tr>
+    <td style="font-weight:500;color:var(--wh)">${l.name}</td><td style="color:var(--tx2)">${l.niche}</td>
+    <td><select class="fi" style="padding:3px 6px;width:100px;font-size:10px" onchange="updateStage(${l.id},this.value)">
+      <option value="cold"${l.stage==='cold'?' selected':''}>Cold</option>
+      <option value="called"${l.stage==='called'?' selected':''}>Called</option>
+      <option value="pitched"${l.stage==='pitched'?' selected':''}>Pitched</option>
+      <option value="closing"${l.stage==='closing'?' selected':''}>Closing</option>
+      <option value="closed"${l.stage==='closed'?' selected':''}>Closed ✓</option>
+    </select></td>
+    <td style="color:var(--tx2)">${l.notes||'—'}</td>
+    <td style="color:var(--mu)">${l.added}</td>
+    <td><button onclick="delLead(${l.id})" style="background:none;border:none;color:var(--mu);cursor:pointer;font-size:13px">×</button></td>
+  </tr>`).join('');
+  updatePipelineStats();
+}
+
+function updatePipelineStats(){
+  const ids=['ps-t','ps-c','ps-z','ps-cl'];
+  const vals=[S.leads.length,S.leads.filter(l=>['called','pitched','closing','closed'].includes(l.stage)).length,S.leads.filter(l=>['pitched','closing','closed'].includes(l.stage)).length,S.leads.filter(l=>l.stage==='closed').length];
+  ids.forEach((id,i)=>{const e=document.getElementById(id);if(e)e.textContent=vals[i];});
+}
+
+// ── TASKS ──
+const empList=[{id:'creative',icon:'🎨',name:'Creative Strategist'},{id:'buyer',icon:'📊',name:'Media Buyer'},{id:'copy',icon:'✍️',name:'Copywriter'},{id:'offer',icon:'💼',name:'Offer Engineer'},{id:'sales',icon:'📞',name:'Sales Coach'},{id:'ops',icon:'⚙️',name:'Operations & Systems'}];
+
+function pageTasks(){return`<div id="task-board"></div>`;}
+
+function renderTasks(){
+  const b=document.getElementById('task-board');if(!b)return;
+  b.innerHTML=empList.map(e=>{
+    const ts=S.tasks[e.id]||[];const done=ts.filter(t=>t.done).length;
+    return`<div class="task-sec">
+      <div class="task-hdr" onclick="toggleTB('${e.id}')">
+        <div class="task-hdr-l"><span>${e.icon}</span><span class="task-emp-name">${e.name}</span><span class="task-count">${done}/${ts.length}</span></div>
+        <span style="font-size:10px;color:var(--mu)" id="chv-${e.id}">▼</span>
+      </div>
+      <div class="task-body" id="tb-${e.id}">
+        ${ts.length===0?`<div style="font-size:10px;color:var(--mu);padding:7px 0">No tasks yet.</div>`:''}
+        ${ts.map((t,i)=>`<div class="task-item">
+          <input type="checkbox" class="tck" ${t.done?'checked':''} onchange="toggleTask('${e.id}',${i},this)">
+          <span class="task-text${t.done?' done':''}">${t.text}</span>
+          <button class="task-del" onclick="delTask('${e.id}',${i})">×</button>
+        </div>`).join('')}
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <input class="fi" id="nt-${e.id}" placeholder="Add task for ${e.name}..." style="flex:1;font-size:11px" onkeydown="if(event.key==='Enter')addTask('${e.id}')">
+          <button class="btn btn-sm" onclick="addTask('${e.id}')">+ Add</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTB(id){
+  const b=document.getElementById('tb-'+id),c=document.getElementById('chv-'+id);
+  if(!b)return;const h=b.style.display==='none';b.style.display=h?'block':'none';c.textContent=h?'▼':'▶';
+}
+function addTask(eid){const inp=document.getElementById('nt-'+eid);const val=inp.value.trim();if(!val)return;S.tasks[eid].push({text:val,done:false});inp.value='';renderTasks();}
+function toggleTask(eid,i,el){S.tasks[eid][i].done=el.checked;renderTasks();}
+function delTask(eid,i){S.tasks[eid].splice(i,1);renderTasks();}
+
+// ── DELIVERABLES ──
+const delTypes=[{id:'hooks',icon:'🔥',label:'Hooks'},{id:'scripts',icon:'🎬',label:'Ad Scripts'},{id:'angles',icon:'🎯',label:'Angles'},{id:'offers',icon:'💼',label:'Offers'},{id:'sales',icon:'📞',label:'Sales Scripts'},{id:'outreach',icon:'📩',label:'Outreach'},{id:'systems',icon:'⚙️',label:'SOPs / Systems'}];
+
+function pageDels(){return`<div id="del-board"></div>`;}
+
+function renderDels(){
+  const b=document.getElementById('del-board');if(!b)return;
+  b.innerHTML=delTypes.map(dt=>{
+    const items=S.deliverables[dt.id]||[];
+    return`<div style="margin-bottom:8px">
+      <div class="del-hdr" onclick="toggleDB('${dt.id}')">
+        <div class="del-title"><span>${dt.icon}</span>${dt.label}<span style="color:var(--mu);font-size:9px;font-weight:400">(${items.length})</span></div>
+        <span style="font-size:10px;color:var(--mu)" id="dchv-${dt.id}">▼</span>
+      </div>
+      <div class="del-body" id="db-${dt.id}">
+        ${items.length===0?`<div style="font-size:10px;color:var(--mu);padding:5px 0">Nothing saved yet.</div>`:''}
+        ${items.map((item,i)=>`<div class="del-item"><span class="del-text">${item}</span><button class="task-del" onclick="delDel('${dt.id}',${i})">×</button></div>`).join('')}
+        <textarea class="fi" id="di-${dt.id}" placeholder="Paste ${dt.label.toLowerCase()} output here..." style="margin-top:10px;min-height:60px"></textarea>
+        <button class="btn btn-sm" onclick="addDel('${dt.id}')" style="margin-top:8px">+ Save Output</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleDB(id){
+  const b=document.getElementById('db-'+id),c=document.getElementById('dchv-'+id);
+  if(!b)return;const h=b.style.display==='none';b.style.display=h?'block':'none';c.textContent=h?'▼':'▶';
+}
+function addDel(tid){const ta=document.getElementById('di-'+tid);const val=ta.value.trim();if(!val)return;S.deliverables[tid].push(val);ta.value='';renderDels();toast('Saved to vault ✓');}
+function delDel(tid,i){S.deliverables[tid].splice(i,1);renderDels();}
+
+// ── WORKFLOW ──
+function pageWorkflow(){
+  const today=new Date().toDateString();
+  if(S.callDate!==today){S.callsToday=0;S.bookedToday=0;S.callDate=today;}
+  return`
+  <div class="wf-steps mb20">
+    <div class="wf-step"><div class="wf-num">01</div><div class="wf-label">Tell CEO</div><div class="wf-text">State your goal. Get a task list.</div><div class="wf-arrow">›</div></div>
+    <div class="wf-step"><div class="wf-num">02</div><div class="wf-label">Assign</div><div class="wf-text">Add tasks to each AI employee.</div><div class="wf-arrow">›</div></div>
+    <div class="wf-step"><div class="wf-num">03</div><div class="wf-label">Collect</div><div class="wf-text">Visit each, run task, get output.</div><div class="wf-arrow">›</div></div>
+    <div class="wf-step"><div class="wf-num">04</div><div class="wf-label">Paste</div><div class="wf-text">Save best outputs to Deliverables.</div><div class="wf-arrow">›</div></div>
+    <div class="wf-step"><div class="wf-num">05</div><div class="wf-label">Execute</div><div class="wf-text">Take ONE action that moves business.</div></div>
+  </div>
+  <div class="g2 mb14">
+    <div class="card">
+      <div class="card-title">Today's Focus</div>
+      <div class="fl" style="margin-bottom:6px">Main Goal</div>
+      <textarea class="fi" id="wf-today" rows="2" placeholder="What's the one thing that moves the needle today?" oninput="S.priorities.today=this.value">${S.priorities.today}</textarea>
+      <div class="fl" style="margin-top:12px;margin-bottom:6px">Action Log</div>
+      <div id="action-log" style="min-height:50px;margin-bottom:10px">${S.actionLog.length?S.actionLog.filter(a=>a.date===today).map(a=>`<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--b1);font-size:11px"><span style="color:var(--mu);flex-shrink:0">${a.time}</span><span style="color:var(--tx)">${a.text}</span></div>`).join('')||'<div style="font-size:10px;color:var(--mu)">No actions logged yet.</div>':'<div style="font-size:10px;color:var(--mu)">No actions logged yet.</div>'}</div>
+      <div style="display:flex;gap:8px"><input class="fi" id="new-action" placeholder="Log an action taken today..." style="flex:1;font-size:11px" onkeydown="if(event.key==='Enter')logAction()"><button class="btn btn-sm" onclick="logAction()">Log</button></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Call Tracker — Today</div>
+      <div class="g2" style="margin-bottom:16px">
+        <div><div class="stat-label">Calls Today</div><div style="font-family:'Bebas Neue';font-size:32px;color:var(--wh)" id="cc-today">${S.callsToday}</div></div>
+        <div><div class="stat-label">Zooms Booked</div><div style="font-family:'Bebas Neue';font-size:32px;color:var(--ac)" id="cc-booked">${S.bookedToday}</div></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm" onclick="addCalls(1)" style="flex:1">+1 Call</button>
+        <button class="btn btn-sm" onclick="addCalls(5)" style="flex:1">+5 Calls</button>
+        <button class="btn btn-gold btn-sm" onclick="addBooked()" style="flex:1">+Zoom ✓</button>
+      </div>
+      <div class="dvd"></div>
+      <div class="card-title" style="margin-bottom:10px">Cold Call Script</div>
+      <div class="script-blk"><div class="script-lbl">Opening</div>"Hey is this [Owner]? Quick question — are you currently running paid ads to bring in new [clients/patients]?"</div>
+      <div class="script-blk"><div class="script-lbl">Value Bridge</div>"I run Quarterly Growth Agency — Meta ads for ${S.profile.niche||'service businesses'}. We help owners book 10-20 new clients per month without touching the ads."</div>
+      <div class="script-blk"><div class="script-lbl">The Ask</div>"Would you be open to a 20-minute Zoom this week? No pitch, just real numbers."</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Objection Handlers</div>
+    <div class="obj-grid">
+      <div class="obj-card"><div class="obj-q">"Not interested"</div><div class="obj-a">"Totally fair — is that because ads haven't worked before, or just not the right time? Either way I can change the math in 2 min."</div></div>
+      <div class="obj-card"><div class="obj-q">"We have someone"</div><div class="obj-a">"Great — are you happy with your current cost per lead? Might be worth comparing numbers."</div></div>
+      <div class="obj-card"><div class="obj-q">"Send an email"</div><div class="obj-a">"Absolutely — what's your biggest challenge right now, getting new clients or keeping them?"</div></div>
+      <div class="obj-card"><div class="obj-q">"How much?"</div><div class="obj-a">"Depends on your goals — that's exactly what the 20-min Zoom is for. No pressure."</div></div>
+    </div>
+  </div>`;
+}
+
+function logAction(){
+  const inp=document.getElementById('new-action');const val=inp.value.trim();if(!val)return;
+  const now=new Date();const time=now.getHours()+':'+now.getMinutes().toString().padStart(2,'0');
+  S.actionLog.unshift({text:val,time,date:now.toDateString()});inp.value='';
+  const log=document.getElementById('action-log');
+  if(log){const d=document.createElement('div');d.style.cssText='display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--b1);font-size:11px';d.innerHTML=`<span style="color:var(--mu);flex-shrink:0">${time}</span><span style="color:var(--tx)">${val}</span>`;log.insertBefore(d,log.firstChild);const empty=log.querySelector('.empty-log');if(empty)empty.remove();}
+  toast('Logged ✓');
+}
+
+function addCalls(n){S.callsToday+=n;const e=document.getElementById('cc-today');if(e)e.textContent=S.callsToday;S.stats.calls+=n;toast(`+${n} call${n>1?'s':''} logged`);}
+function addBooked(){S.bookedToday++;const e=document.getElementById('cc-booked');if(e)e.textContent=S.bookedToday;S.stats.zooms++;toast('🎯 Zoom booked!');}
+
+// ── WEEKLY REVIEW ──
+function pageReview(){
+  return`
+  <div class="g2 mb14">
+    <div class="review-card"><div class="review-label"><span>🏆</span><span style="color:var(--ac)">Wins This Week</span></div><textarea class="fi" id="rv-wins" rows="4" placeholder="What went right? Even small wins." oninput="S.review.wins=this.value"></textarea></div>
+    <div class="review-card"><div class="review-label"><span>🚧</span><span style="color:var(--red)">Problems / Blockers</span></div><textarea class="fi" id="rv-problems" rows="4" placeholder="Where did you get stuck?" oninput="S.review.problems=this.value"></textarea></div>
+    <div class="review-card"><div class="review-label"><span>🔧</span><span style="color:var(--gold)">Fixes</span></div><textarea class="fi" id="rv-fixes" rows="4" placeholder="What will you do differently?" oninput="S.review.fixes=this.value"></textarea></div>
+    <div class="review-card"><div class="review-label"><span>🎯</span><span style="color:var(--g3)">Next Week's Focus</span></div><textarea class="fi" id="rv-next" rows="4" placeholder="The #1 thing next week must accomplish." oninput="S.review.next=this.value"></textarea></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Weekly Numbers</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+      <div><div class="fl">Calls Made</div><input class="fi" id="w-calls" type="number" placeholder="0" oninput="S.review.calls=this.value"></div>
+      <div><div class="fl">Zooms Booked</div><input class="fi" id="w-zooms" type="number" placeholder="0" oninput="S.review.zooms=this.value"></div>
+      <div><div class="fl">Proposals</div><input class="fi" id="w-props" type="number" placeholder="0" oninput="S.review.props=this.value"></div>
+      <div><div class="fl">Clients Closed</div><input class="fi" id="w-closed" type="number" placeholder="0" oninput="S.review.closed=this.value"></div>
+      <div><div class="fl">Revenue ($)</div><input class="fi" id="w-rev" type="number" placeholder="0" oninput="S.review.rev=this.value"></div>
+    </div>
+  </div>`;
+}
+
+function loadReviewFields(){
+  ['wins','problems','fixes','next','calls','zooms','props','closed','rev'].forEach(k=>{
+    const el=document.getElementById(k==='wins'||k==='problems'||k==='fixes'||k==='next'?'rv-'+k:'w-'+k);
+    if(el&&S.review[k])el.value=S.review[k];
+  });
+}
+
+// ── CEO COMMAND ──
+function pageCommand(){
+  return`
+  <div class="cmd-wrap">
+    <div class="cmd-arrow">></div>
+    <input class="cmd-in" id="cmd-in" placeholder="State your goal, question, or situation..." onkeydown="if(event.key==='Enter')runCmd()">
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+    <button class="btn btn-run" onclick="runCmd()">Run Command →</button>
+    <button class="btn btn-ghost btn-sm" onclick="setCmd('My goal today is to book my first Zoom call. Give me a step-by-step plan.')">Today's Plan</button>
+    <button class="btn btn-ghost btn-sm" onclick="setCmd('I have a Zoom call tomorrow. Prep me completely — questions, pitch, how to close.')">Prep for Zoom</button>
+    <button class="btn btn-ghost btn-sm" onclick="setCmd('I have been cold calling for 3 days with no Zoom booked. Diagnose what I might be doing wrong.')">Diagnose Calls</button>
+    <button class="btn btn-ghost btn-sm" onclick="setCmd('Write 10 scroll-stopping hooks for a Meta ad targeting med spa owners.')">Get Hooks</button>
+  </div>
+  <div id="cmd-history"></div>`;
+}
+
+function setCmd(t){const el=document.getElementById('cmd-in');if(el){el.value=t;el.focus();}}
+
+function fmtCmdResponse(text){
+  return text.split('\n').filter(l=>l.trim()).map(line=>{
+    if(/^\d+\./.test(line.trim()))return`<div style="padding:3px 0;color:var(--tx)">${line}</div>`;
+    if(line.startsWith('-')||line.startsWith('→'))return`<div style="padding:2px 0 2px 10px;color:var(--tx2)">${line}</div>`;
+    if(line===line.toUpperCase()&&line.length<55&&line.length>3)return`<div style="color:var(--ac);font-size:8px;letter-spacing:2px;text-transform:uppercase;margin-top:10px;margin-bottom:2px">${line}</div>`;
+    return`<div style="padding:2px 0;color:var(--tx2)">${line}</div>`;
+  }).join('');
+}
+
+function renderCmdHistory(){
+  const c=document.getElementById('cmd-history');if(!c)return;
+  c.innerHTML=S.cmdHistory.slice(0,20).map(e=>`
+    <div class="cmd-card">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+        <div style="font-size:8px;letter-spacing:2px;color:var(--g3);text-transform:uppercase">CEO Command</div>
+        <span style="font-size:9px;color:var(--mu)">${e.time}</span>
+      </div>
+      <div class="cmd-q">> ${e.cmd}</div>
+      <div class="cmd-a">${fmtCmdResponse(e.response)}</div>
+    </div>`).join('');
+}
+
+async function runCmd(){
+  const inp=document.getElementById('cmd-in');
+  const cmd=inp.value.trim();if(!cmd)return;
+  inp.value='';
+  const timeStr=new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  const outId='co-'+Date.now();
+  const card=document.createElement('div');
+  card.className='cmd-card';
+  card.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:10px"><div style="font-size:8px;letter-spacing:2px;color:var(--g3);text-transform:uppercase">CEO Command</div><span style="font-size:9px;color:var(--mu)">${timeStr}</span></div><div class="cmd-q">> ${cmd}</div><div class="cmd-a" id="${outId}"><span style="color:var(--mu);font-style:italic;animation:fadepulse 1.5s infinite">Thinking...</span></div>`;
+  const hist=document.getElementById('cmd-history');
+  if(hist)hist.insertBefore(card,hist.firstChild);
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`You are the CEO of Quarterly Growth Agency. Agency: Niche: ${S.profile.niche}, Service: ${S.profile.service}, Skill: ${S.profile.skill}, Goal: ${S.profile.goal}, Starting point: ${S.profile.start}, Offer: ${S.profile.offer||'not defined'}. AI employees: Creative Strategist, Media Buyer, Copywriter, Offer Engineer, Sales Coach, Operations. Be direct, tactical, numbered steps where applicable. Plain text, no markdown. Under 300 words unless needed.`,messages:[{role:'user',content:cmd}]})
+    });
+    const data=await res.json();
+    const text=data.content?.[0]?.text||'No response.';
+    const outEl=document.getElementById(outId);
+    if(outEl)outEl.innerHTML=fmtCmdResponse(text);
+    S.cmdHistory.unshift({cmd,response:text,time:timeStr});
+    if(S.cmdHistory.length>20)S.cmdHistory=S.cmdHistory.slice(0,20);
+  }catch(e){
+    const outEl=document.getElementById(outId);
+    if(outEl)outEl.innerHTML=`<span style="color:var(--red)">Error: ${e.message}</span>`;
+  }
+}
+
+// ── INIT ──
+renderPage('dashboard');
+</script>
+</body>
+</html>
