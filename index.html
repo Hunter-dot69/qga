@@ -292,7 +292,7 @@ textarea.fi{resize:vertical}
 <div class="toast" id="toast"></div>
 
 <script>
-const API_KEY = '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';
+const API_KEY = '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';
 
 // ── STATE ──
 let S = {
@@ -892,10 +892,15 @@ async function sendEmpMsg(){
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sysPrompt,messages:S.empConvos[currentEmp].map(m=>({role:m.role,content:m.content}))})
     });
     const data=await res.json();
-    const reply=data.content?.[0]?.text||'No response.';
-    S.empConvos[currentEmp].push({role:'assistant',content:reply});
+    if(data.error){
+      S.empConvos[currentEmp].push({role:'assistant',content:'API Error: '+JSON.stringify(data.error)});
+    } else if(data.content?.[0]?.text){
+      S.empConvos[currentEmp].push({role:'assistant',content:data.content[0].text});
+    } else {
+      S.empConvos[currentEmp].push({role:'assistant',content:'Raw: '+JSON.stringify(data)});
+    }
   }catch(e){
-    S.empConvos[currentEmp].push({role:'assistant',content:'Error: '+e.message});
+    S.empConvos[currentEmp].push({role:'assistant',content:'Fetch error: '+e.message});
   }
   renderEmpMsgs();
 }
@@ -1192,7 +1197,10 @@ async function runCmd(){
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`You are the CEO of Quarterly Growth Agency. Agency: Niche: ${S.profile.niche}, Service: ${S.profile.service}, Skill: ${S.profile.skill}, Goal: ${S.profile.goal}, Starting point: ${S.profile.start}, Offer: ${S.profile.offer||'not defined'}. AI employees: Creative Strategist, Media Buyer, Copywriter, Offer Engineer, Sales Coach, Operations. Be direct, tactical, numbered steps where applicable. Plain text, no markdown. Under 300 words unless needed.`,messages:[{role:'user',content:cmd}]})
     });
     const data=await res.json();
-    const text=data.content?.[0]?.text||'No response.';
+    let text='';
+    if(data.error){text='API Error: '+JSON.stringify(data.error);}
+    else if(data.content?.[0]?.text){text=data.content[0].text;}
+    else{text='Raw: '+JSON.stringify(data);}
     const outEl=document.getElementById(outId);
     if(outEl)outEl.innerHTML=fmtCmdResponse(text);
     S.cmdHistory.unshift({cmd,response:text,time:timeStr});
