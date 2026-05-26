@@ -886,9 +886,9 @@ async function sendEmpMsg(){
   c.appendChild(t);c.scrollTop=c.scrollHeight;
   const sysPrompt=empCfg[currentEmp].system(S.profile);
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('https://qga-proxy.hunterwebdesignss.workers.dev/',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sysPrompt,messages:S.empConvos[currentEmp].map(m=>({role:m.role,content:m.content}))})
     });
     const data=await res.json();
@@ -1186,9 +1186,9 @@ async function runCmd(){
   const hist=document.getElementById('cmd-history');
   if(hist)hist.insertBefore(card,hist.firstChild);
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
+    const res=await fetch('https://qga-proxy.hunterwebdesignss.workers.dev/',{
       method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':API_KEY,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`You are the CEO of Quarterly Growth Agency. Agency: Niche: ${S.profile.niche}, Service: ${S.profile.service}, Skill: ${S.profile.skill}, Goal: ${S.profile.goal}, Starting point: ${S.profile.start}, Offer: ${S.profile.offer||'not defined'}. AI employees: Creative Strategist, Media Buyer, Copywriter, Offer Engineer, Sales Coach, Operations. Be direct, tactical, numbered steps where applicable. Plain text, no markdown. Under 300 words unless needed.`,messages:[{role:'user',content:cmd}]})
     });
     const data=await res.json();
